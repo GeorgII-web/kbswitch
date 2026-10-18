@@ -53,6 +53,7 @@ function TypeKeys([string]$text) {
     Wait 300
 }
 function DoubleShift { Tap 0xA0; Wait 100; Tap 0xA0; Wait 1500 }
+function PauseKey { Tap 0x13; Wait 1500 }
 function ShiftPause {
     [Native]::Key(0xA0, 0, $false); Wait 50; Tap 0x13; Wait 50
     [Native]::Key(0xA0, 0, $true); Wait 1500
@@ -131,6 +132,10 @@ try {
         TypeKeys 'ghbdtn'; Tap 0x08; Wait 100; TypeKeys 'n'; DoubleShift
         Expect "$kind Backspace in the phrase" (ReadAll) @('привет', 'ghbdtn')
         ClearAll
+        # 3b. one word, Pause alone: converts the typed phrase like double Shift
+        TypeKeys 'ghbdtn'; $typed = ReadAll; PauseKey
+        Expect "$kind Pause converts the typed phrase" (ReadAll) @((Other $typed).Split(' ')[0])
+        ClearAll
         # 4. selection + Shift+Pause, with something else on the clipboard that must survive
         Set-Clipboard -Value 'KEEP ME'
         TypeKeys 'ghbdtn'; $typed = ReadAll; SelectLine; ShiftPause
@@ -183,6 +188,9 @@ try {
         ClearAll
         TypeKeys 'ghbdtn'; Tap 0x08; Wait 100; TypeKeys 'n'; DoubleShift
         Expect "$kind Backspace in the phrase" (ReadAll) @('привет', 'ghbdtn')
+        ClearAll
+        TypeKeys 'ghbdtn'; PauseKey
+        Expect "$kind Pause converts the typed phrase" (ReadAll) @('привет', 'ghbdtn')
         ClearAll
         TypeKeys 'ghbdtn'; SelectLine; DoubleShift; $r = ReadAll
         Expect "$kind Shift+Home selection, double Shift" $r @('привет', 'ghbdtn')

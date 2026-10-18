@@ -13,7 +13,7 @@ replay it in the other layout. Entrypoint `hook::start` (`src/hook.rs`) reads th
 
 | Item | What |
 |---|---|
-| `WM_KBSWITCH_CONVERT` = `WM_APP + 1` | to the main thread; `wParam` `0` double Shift, `SELECTION_ONLY` (`1`) Shift+Pause |
+| `WM_KBSWITCH_CONVERT` = `WM_APP + 1` | to the main thread; `wParam` `0` double Shift or Pause, `SELECTION_ONLY` (`1`) Shift+Pause |
 | `WM_KBSWITCH_SWITCH` = `WM_APP + 2` | Caps Lock in `switch_layout` mode → `App::switch_layout` |
 | `WM_KBSWITCH_CHECK` = `WM_APP + 3` | a Space ended a word → `App::check_word` |
 | `ENABLED: AtomicBool` | the tray/`enabled` setting; only gates `request_convert`, the state machine keeps running |
@@ -48,8 +48,8 @@ Effects carried out by the hook: `Pass` → next hook; `Convert` → `request_co
 
 `KeyEvent { vk, scan, down, time, shift, ctrl_alt, win, window: usize, lang }`, `Copy + Default`; `time` is the
 hook's wrapping ms timestamp, `shift` means Shift was held before this event (so for a Shift key-down it is the
-other Shift). `Effect`: `Pass`, `Convert` (passed on, completed a double Shift), `ConvertSelection` (swallowed,
-Shift+Pause), `Check` (passed on, a Space ended a word; the word waits in `Capture::take_word`), `Swallow`,
+other Shift). `Effect`: `Pass`, `Convert` (passed on, completed a double Shift), `ConvertPause` (swallowed, Pause
+alone converts like double Shift), `ConvertSelection` (swallowed, Shift+Pause), `Check` (passed on, a Space ended a word; the word waits in `Capture::take_word`), `Swallow`,
 `SwitchLayout` (swallowed and the layout switches). Constants: `VK_PAUSE` `0x13`, `VK_CAPITAL` `0x14`, `VK_SPACE`
 `0x20`; `is_shift` = `0x10 | 0xA0 | 0xA1`.
 
@@ -74,8 +74,8 @@ init.
    echoes toggle keys), and before this rule each one called `trigger.other()` and cancelled a pending Shift tap:
    a double Shift during the blink or right after a layout change did nothing.
 5. Any other key-down: `trigger.other()` first (a key between or inside the taps cancels). Then, before the
-   buffer, `vk == VK_PAUSE && shift && !ctrl_alt && !win` → `ConvertSelection`: the Pause must not reset the
-   phrase (step 3 forgets it itself) and must not reach the app. Then the Win+Space exception: `vk == VK_SPACE &&
+   buffer, `vk == VK_PAUSE && !ctrl_alt && !win` → `ConvertSelection` with `shift`, else `ConvertPause`: the Pause
+   must not reset the phrase (Pause alone retypes it, Shift+Pause has step 3 forget it) and must not reach the app. Then the Win+Space exception: `vk == VK_SPACE &&
    win && !ctrl_alt` is the system layout hotkey and is not fed to the buffer (a Space with Win held would
    otherwise reset as a modifier chord), so a phrase survives a layout switch through it. Every other key-down
    goes to `buffer.key_down(Key { vk, scan, shift }, lang, ctrl_alt || win)`. With `detect` on and `vk ==

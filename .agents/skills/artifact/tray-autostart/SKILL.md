@@ -43,7 +43,7 @@ Everything the user sees besides the conversion itself. Entry `src/main.rs`; sta
 
 - `new()`: `settings::load_or_create(path)` → `Tray::new(&settings)` (failure → `Err("Creating the tray icon failed:
   …")`) → `apply(error)` → `tray.set_language(layout::foreground_lang())`.
-- `convert(selection_only)`: `convert::run_selection` (Shift+Pause) or `convert::run` (double Shift), see
+- `convert(selection_only)`: `convert::run_selection` (Shift+Pause) or `convert::run` (double Shift or Pause), see
   [step-3-convert](../../domain/step-3-convert/SKILL.md).
 - `check_word()`: `capture().take_word()`; with a `spelling` and `detect::wrong_layout` true → `blink =
   BLINK_TOGGLES + blink % 2` (restarted mid-blink with the LED inverted: one toggle more, so it still ends as it was).
@@ -74,7 +74,7 @@ default, unknown keys are ignored and dropped on the next save. Enums use `renam
 
 | Key | Type / values | Default | Meaning |
 |---|---|---|---|
-| `enabled` | bool | `true` | double Shift and Shift+Pause convert; `hook::ENABLED`. Off: step 2 keeps tracking, LED keeps working |
+| `enabled` | bool | `true` | double Shift, Pause and Shift+Pause convert; `hook::ENABLED`. Off: step 2 keeps tracking, LED keeps working |
 | `led` | bool | `true` | Scroll Lock shows the layout, on for any layout but EN (0 = not read yet counts as EN) |
 | `tap_max_ms` | u32, clamped 50–1000 | `TAP_MAX_MS` 250 | longest Shift press that is a tap |
 | `double_ms` | u32, clamped 100–1000 | `DOUBLE_MS` 300 | longest gap between the taps |

@@ -63,7 +63,7 @@ powershell.exe -ExecutionPolicy Bypass -File "$(wslpath -w scripts/e2e-notepad.p
 ## End-to-end check on Windows (from WSL)
 
 `scripts/e2e-notepad.ps1` runs the real exe with real input against three targets: a WinForms `TextBox` (the
-Win32 Edit control), a `RichTextBox` (RichEdit) and the real Windows 11 Notepad: 38 checks, about 2 min; hands off the
+Win32 Edit control), a `RichTextBox` (RichEdit) and the real Windows 11 Notepad: 41 checks, about 2 min; hands off the
 keyboard and mouse while it runs. Output is `PASS`/`FAIL` lines, exit 1 on any failure; the same lines plus the
 app's own `debug_log!` output (when `-Exe` is a debug build) go to `var/e2e.log`. Run after every change to
 `capture`, `convert`, `clipboard`, `input` or `hook`; the manual checklist covers the rest.
@@ -96,6 +96,7 @@ powershell.exe -ExecutionPolicy Bypass -File "$(wslpath -w scripts/e2e-notepad.p
   `привет мир тест`), decided by whether `text` has Cyrillic.
 - `DoubleShift`: Left Shift tap, 100 ms gap, tap, 1.5 s for the conversion; within `tap_max_ms` 250 and
   `double_ms` 300 (defaults, [trigger](../../domain/step-2-trigger/SKILL.md)).
+- `PauseKey`: Pause (0x13) tap, 1.5 s for the conversion.
 - `ShiftPause`: Left Shift down, 50 ms, Pause (0x13) tap, 50 ms, Shift up, 1.5 s: the conversion waits for that
   Shift release ([convert](../../domain/step-3-convert/SKILL.md)).
 - `SelectLine`: Shift held around Home: selects back to the line start, a selection the phrase logic does not

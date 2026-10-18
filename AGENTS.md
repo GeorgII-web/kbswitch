@@ -2,7 +2,7 @@
 
 Windows tray app in Rust that fixes text typed in the wrong keyboard layout (EN ↔ RU), like Caramba Switcher or
 Punto Switcher. A double Shift press converts the phrase typed since the last reset or, when nothing was typed, the
-selected text, and switches the layout of the foreground window; Shift+Pause converts only the selected text, for
+selected text, and switches the layout of the foreground window; Pause (Break) alone does the same; Shift+Pause converts only the selected text, for
 apps that use double Shift themselves. The tray icon (the layout code EN or RU as letters, blue or red) and
 the Scroll Lock LED (on = not EN) show the layout.
 A word typed in the wrong layout blinks the Scroll Lock LED. Caps Lock can be disabled from the tray ("Disable Caps Lock") or made to switch the layout.
@@ -12,14 +12,14 @@ Settings live in `settings.json` (`%APPDATA%\kbswitch`, or next to the exe) and 
 
 - Windows only (Win32 API via the `windows` crate), x86_64, single `.exe`, no installer, no console window.
 - Layouts: EN (US) and RU only. The pair is a constant, not a setting.
-- Conversion runs only on double Shift or Shift+Pause; wrong-layout detection only warns (Scroll Lock blink), it never converts.
+- Conversion runs only on double Shift, Pause or Shift+Pause; wrong-layout detection only warns (Scroll Lock blink), it never converts.
 
 ## Pipeline
 
 | Step | What | Skill |
 |---|---|---|
 | 1 | Low-level keyboard and mouse hooks record the typed phrase and its layout; reset rules | [capture](.agents/skills/domain/step-1-capture/SKILL.md) |
-| 2 | Detect double Shift or Shift+Pause and hand over to conversion | [trigger](.agents/skills/domain/step-2-trigger/SKILL.md) |
+| 2 | Detect double Shift, Pause or Shift+Pause and hand over to conversion | [trigger](.agents/skills/domain/step-2-trigger/SKILL.md) |
 | 3 | Convert the typed phrase (erase and retype, or select and paste) or the selection (clipboard, restored after); switch layout | [convert](.agents/skills/domain/step-3-convert/SKILL.md) |
 | 4 | While typing: a word in the wrong layout blinks the Scroll Lock LED | [detect](.agents/skills/domain/step-4-detect/SKILL.md) |
 
@@ -29,7 +29,7 @@ Settings live in `settings.json` (`%APPDATA%\kbswitch`, or next to the exe) and 
 |---|---|
 | [architecture](.agents/skills/general/architecture/SKILL.md) | any code change: module map, threads, invariants, code rules |
 | [step-1-capture](.agents/skills/domain/step-1-capture/SKILL.md) | keyboard/mouse hook, the phrase and its layout, what resets it, Backspace, the Caps Lock modes, modifiers |
-| [step-2-trigger](.agents/skills/domain/step-2-trigger/SKILL.md) | double Shift detection, timing, Shift+Pause, false or missed triggers |
+| [step-2-trigger](.agents/skills/domain/step-2-trigger/SKILL.md) | double Shift detection, timing, Pause, Shift+Pause, false or missed triggers |
 | [step-3-convert](.agents/skills/domain/step-3-convert/SKILL.md) | typed vs selection conversion, `SendInput` replay, clipboard, layout switching |
 | [step-4-detect](.agents/skills/domain/step-4-detect/SKILL.md) | wrong-layout detection, the spell checker, the warning blink |
 | [clipboard-input](.agents/skills/artifact/clipboard-input/SKILL.md) | clipboard snapshot and restore, Win+V exclusion flags, every injected key sequence (`SendInput` builders, marker, scan-code replay) |

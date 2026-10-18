@@ -44,6 +44,8 @@ pub enum Effect {
     Pass,
     /// Pass it on; it completed a double Shift.
     Convert,
+    /// Swallow it; Pause alone converts like double Shift.
+    ConvertPause,
     /// Swallow it; Shift+Pause asks to convert the selected text only.
     ConvertSelection,
     /// Pass it on; a Space ended a word to check for the wrong layout (`Capture::take_word`).
@@ -105,8 +107,12 @@ impl Capture {
         }
         if e.down {
             self.trigger.other();
-            if e.vk == VK_PAUSE && e.shift && !e.ctrl_alt && !e.win {
-                return Effect::ConvertSelection;
+            if e.vk == VK_PAUSE && !e.ctrl_alt && !e.win {
+                return if e.shift {
+                    Effect::ConvertSelection
+                } else {
+                    Effect::ConvertPause
+                };
             }
             let layout_hotkey = e.vk == VK_SPACE && e.win && !e.ctrl_alt; // Win+Space
             if !layout_hotkey {
@@ -341,17 +347,30 @@ mod tests {
     }
 
     #[test]
-    fn pause_alone_or_with_ctrl_is_no_trigger() {
+    fn pause_alone_converts_the_phrase_and_is_swallowed() {
         let mut c = Capture::new();
         tap(&mut c, A, 0, EN_WINDOW);
-        assert_eq!(c.key(&down(PAUSE, 100, EN_WINDOW)), Effect::Pass);
+        assert_eq!(c.key(&down(PAUSE, 100, EN_WINDOW)), Effect::ConvertPause);
+        assert_eq!(c.key(&up(PAUSE, 140, EN_WINDOW)), Effect::Pass);
+        assert_eq!(typed(&c), [A]); // the phrase stays for step 3
+    }
+
+    #[test]
+    fn pause_with_ctrl_alt_or_win_is_no_trigger() {
+        let mut c = Capture::new();
+        tap(&mut c, A, 0, EN_WINDOW);
         let ctrl_shift = KeyEvent {
             shift: true,
             ctrl_alt: true,
             ..EN_WINDOW
         };
         assert_eq!(c.key(&down(PAUSE, 200, ctrl_shift)), Effect::Pass);
-        assert!(typed(&c).is_empty()); // Pause resets the phrase like any other key
+        let win = KeyEvent {
+            win: true,
+            ..EN_WINDOW
+        };
+        assert_eq!(c.key(&down(PAUSE, 300, win)), Effect::Pass);
+        assert!(typed(&c).is_empty()); // a Pause chord resets the phrase like any other key
     }
 
     #[test]

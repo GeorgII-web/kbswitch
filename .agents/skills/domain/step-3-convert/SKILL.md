@@ -1,12 +1,12 @@
 ---
 name: step-3-convert
-description: Step 3 of kbswitch — every function, constant and decision of the conversion in `src/convert.rs` (`run` on double Shift, `run_selection` on Shift+Pause, `paste_over`, `retype`, `selection`, wait constants), the layout switch in `src/layout.rs`, the EN↔RU tables in `src/charmap.rs`, limits, tests. Use when changing conversion, the Unicode retype and its pacing, the char map, layout switching or timings.
+description: Step 3 of kbswitch — every function, constant and decision of the conversion in `src/convert.rs` (`run` on double Shift or Pause, `run_selection` on Shift+Pause, `paste_over`, `retype`, `selection`, wait constants), the layout switch in `src/layout.rs`, the EN↔RU tables in `src/charmap.rs`, limits, tests. Use when changing conversion, the Unicode retype and its pacing, the char map, layout switching or timings.
 ---
 
 # Step 3: convert
 
 Runs on the main thread after `WM_KBSWITCH_CONVERT` (`App::convert(selection_only)` → `convert::run` on double
-Shift, `convert::run_selection` on Shift+Pause). Code: `src/convert.rs`, `src/layout.rs`, `src/charmap.rs`,
+Shift or Pause, `convert::run_selection` on Shift+Pause). Code: `src/convert.rs`, `src/layout.rs`, `src/charmap.rs`,
 `src/lang.rs`. The clipboard and `SendInput` helpers it calls are in
 [clipboard-input](../../artifact/clipboard-input/SKILL.md).
 

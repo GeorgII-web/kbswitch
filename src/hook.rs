@@ -20,7 +20,7 @@ use crate::capture::{Capture, Effect, KeyEvent};
 use crate::input::KBSWITCH_MARKER;
 use crate::layout;
 
-/// Posted to the main thread when double Shift fires; `wparam` = `SELECTION_ONLY` for Shift+Pause.
+/// Posted to the main thread when double Shift or Pause fires; `wparam` = `SELECTION_ONLY` for Shift+Pause.
 pub const WM_KBSWITCH_CONVERT: u32 = WM_APP + 1;
 pub const SELECTION_ONLY: usize = 1;
 /// Posted to the main thread when Caps Lock switches the layout.
@@ -78,6 +78,10 @@ unsafe extern "system" fn keyboard_proc(code: i32, wparam: WPARAM, lparam: LPARA
             match effect {
                 Effect::Pass => {}
                 Effect::Convert => request_convert(0),
+                Effect::ConvertPause => {
+                    request_convert(0);
+                    return LRESULT(1);
+                }
                 Effect::ConvertSelection => {
                     request_convert(SELECTION_ONLY);
                     return LRESULT(1);

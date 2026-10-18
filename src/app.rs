@@ -55,7 +55,7 @@ impl App {
         Ok(app)
     }
 
-    /// Double Shift, or Shift+Pause (`selection_only`).
+    /// Double Shift or Pause, or Shift+Pause (`selection_only`).
     pub fn convert(&self, selection_only: bool) {
         if selection_only {
             convert::run_selection(&self.settings);

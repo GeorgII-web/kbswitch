@@ -1,6 +1,6 @@
 ---
 name: test-cases
-description: Every test case of kbswitch in one place — the 76 Linux unit tests and the Windows-only ones per module with what each proves, the 38 end-to-end checks of `scripts/e2e-notepad.ps1` per target (Edit, RichEdit, Windows 11 Notepad) with steps and expected text, the manual checklist, and the known gaps. Use when adding a test, looking for a case that covers a bug, deciding what a change must not break, or reporting what was verified.
+description: Every test case of kbswitch in one place — the 77 Linux unit tests and the Windows-only ones per module with what each proves, the 41 end-to-end checks of `scripts/e2e-notepad.ps1` per target (Edit, RichEdit, Windows 11 Notepad) with steps and expected text, the manual checklist, and the known gaps. Use when adding a test, looking for a case that covers a bug, deciding what a change must not break, or reporting what was verified.
 ---
 
 # Test cases
@@ -38,7 +38,8 @@ Helpers: `down`/`up`/`tap` build `KeyEvent`s from the `EN_WINDOW` context, `scan
 | `key_between_shift_taps_cancels` | a letter between the taps cancels |
 | `scroll_lock_between_shift_taps_does_not_cancel` | 0x91 and 0x90 between the taps (LED echoes) pass; the double Shift still fires |
 | `shift_pause_converts_the_selection_and_is_swallowed` | `ConvertSelection` on the Pause down, `Pass` on its up and the Shift up, that Shift is no tap, phrase kept |
-| `pause_alone_or_with_ctrl_is_no_trigger` | Pause and Ctrl+Shift+Pause pass and reset the phrase |
+| `pause_alone_converts_the_phrase_and_is_swallowed` | `ConvertPause` on the Pause down, `Pass` on its up, phrase `[A]` kept for the retype |
+| `pause_with_ctrl_alt_or_win_is_no_trigger` | Ctrl+Shift+Pause and Win+Pause pass and reset the phrase |
 | `window_change_starts_a_new_phrase` | a key in another foreground window starts over |
 | `click_resets_the_phrase_and_a_pending_tap` | a mouse button clears the phrase and cancels a tap |
 | `alt_shift_layout_switch_keeps_the_phrase_until_typing_goes_on` | the hotkey keeps the phrase; the next key in the new layout starts over |
@@ -136,12 +137,12 @@ from US text (capital = Shift, `,` = 0xBC, `?` = Shift+0xBF).
 No unit tests: `hook.rs`, `convert.rs`, `clipboard.rs`, `layout.rs` (except the classes), `led.rs`, `spell.rs`,
 `app.rs`, `autostart.rs`, `main.rs`. They only call the API; the two layers below cover them.
 
-## End to end: `scripts/e2e-notepad.ps1` (38 checks)
+## End to end: `scripts/e2e-notepad.ps1` (41 checks)
 
 Real unmarked input into a running kbswitch. `Other(x)` = the three words in the other layout
 (`ghbdtn vbh ntcn` ↔ `привет мир тест`); the layout at start is unknown, so a first result may be either spelling.
 
-Per control, `TextBox` (Edit) and `RichTextBox` (RichEdit), 11 checks each (10 for the TextBox):
+Per control, `TextBox` (Edit) and `RichTextBox` (RichEdit), 12 checks each (11 for the TextBox):
 
 | # | Steps | Expected |
 |---|---|---|
@@ -149,6 +150,7 @@ Per control, `TextBox` (Edit) and `RichTextBox` (RichEdit), 11 checks each (10 f
 | 2 | type `ghbdtn vbh ntcn` | one of the two spellings |
 | 3 | double Shift, four times | each result is `Other` of the previous |
 | 4 | type `ghbdtn`, Backspace, `n`, double Shift | `привет` or `ghbdtn` |
+| 4b | type `ghbdtn`, Pause | first word of `Other(typed)` (the typed phrase retyped) |
 | 5 | clipboard `KEEP ME`, type `ghbdtn`, Shift+Home, Shift+Pause | clipboard still `KEEP ME`; text = first word of `Other(typed)` |
 | 6a | type `ghbdtn`, Shift+Home, double Shift | first word of `Other(typed)` |
 | 6b | type `ghbdtn`, Shift+Left × 6, double Shift | same |
@@ -156,7 +158,7 @@ Per control, `TextBox` (Edit) and `RichTextBox` (RichEdit), 11 checks each (10 f
 | 7a | type `ghbdtn`, mouse double-click on it, double Shift | same |
 | 7b | type `ghbdtn`, mouse drag over it, double Shift | same |
 
-Windows 11 Notepad, a new tab, 10 checks (reading goes through Ctrl+A, which resets the phrase, so the words are
+Windows 11 Notepad, a new tab, 11 checks (reading goes through Ctrl+A, which resets the phrase, so the words are
 retyped before every conversion):
 
 | # | Steps | Expected |
@@ -165,10 +167,11 @@ retyped before every conversion):
 | N2 | type `ghbdtn vbh ntcn`, double Shift | one of the two spellings |
 | N3 | three times: clear, type the words, double Shift | a spelling, and `Other` of the previous result |
 | N4 | type `ghbdtn`, Backspace, `n`, double Shift | `привет` or `ghbdtn` |
+| N4b | type `ghbdtn`, Pause | `привет` or `ghbdtn` |
 | N6a | type `ghbdtn`, Shift+Home, double Shift | `привет` or `ghbdtn` |
 | N6b | type `ghbdtn`, Shift+Left × 6, double Shift | `привет` or `ghbdtn` |
 
-Last full runs: 38/38 three times in a row (release exe, 2026-10-17).
+Last full runs: 38/38 three times in a row (release exe, 2026-10-17), before the Pause checks.
 
 ## Manual checklist
 
@@ -183,7 +186,9 @@ Release exe, in Notepad, a browser text field and Windows Terminal, unless a row
 | type `ghbdtn`, switch to RU by Alt+Shift or Win+Space, double Shift | `привет`, layout stays RU |
 | copy an image or a file in Explorer, select `руддщ` (not in Terminal), double Shift | `hello`; Ctrl+V afterwards pastes the image or file again |
 | type `ghbdtn`, select it with Shift+Home, Shift+Pause | `привет`, layout RU; nothing typed in the app from the Pause key |
-| Shift+Pause with nothing selected; Pause alone | only the layout switch; Pause reaches the app |
+| Shift+Pause with nothing selected | only the layout switch |
+| type `ghbdtn`, Pause (Break) | `привет`, layout RU; nothing typed in the app from the Pause key |
+| Win+Pause | System settings open; no conversion |
 | typing capitals, slow double Shift, Ctrl+Shift twice | no conversion |
 | Caps Lock or a click, then double Shift | only the layout switch |
 | Terminal: type `ghbdtn`, double Shift | retyped, never Ctrl+C; a selection there only switches the layout |

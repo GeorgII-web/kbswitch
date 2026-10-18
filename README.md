@@ -16,6 +16,7 @@ Requirements: Windows 10/11 x64 with the English (US) and Russian layouts instal
 | Keys | What happens |
 |---|---|
 | Shift, Shift (double tap) | converts the phrase typed since the last reset, or the selected text when nothing was typed, and switches the layout |
+| Pause (Break) | the same as double Shift |
 | Shift+Pause | converts only the selected text (for apps that use double Shift themselves) |
 
 - The tray icon shows the current layout: `EN` (blue) or `RU` (red).
@@ -32,7 +33,7 @@ first start and applied on save, no restart needed.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` | double Shift and Shift+Pause convert |
+| `enabled` | `true` | double Shift, Pause and Shift+Pause convert |
 | `led` | `true` | Scroll Lock LED shows the layout |
 | `tap_max_ms` | `250` | longest Shift press that counts as a tap (50–1000) |
 | `double_ms` | `300` | longest gap between the two taps (100–1000) |

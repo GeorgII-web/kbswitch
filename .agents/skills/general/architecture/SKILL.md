@@ -60,7 +60,7 @@ Messages, all posted with `PostThreadMessageW` to `MAIN_THREAD` and matched only
 
 | Message | Posted by | wParam | Handler |
 |---|---|---|---|
-| `WM_KBSWITCH_CONVERT` = `WM_APP+1` | `request_convert`, only if `ENABLED && !CONVERTING` | 0 double Shift, `SELECTION_ONLY` = 1 Shift+Pause | `App::convert(selection_only)` → `convert::run` / `run_selection` |
+| `WM_KBSWITCH_CONVERT` = `WM_APP+1` | `request_convert`, only if `ENABLED && !CONVERTING` | 0 double Shift or Pause, `SELECTION_ONLY` = 1 Shift+Pause | `App::convert(selection_only)` → `convert::run` / `run_selection` |
 | `WM_KBSWITCH_SWITCH` = `WM_APP+2` | Caps Lock in `switch_layout` mode | 0 | `App::switch_layout` → `layout::toggle` |
 | `WM_KBSWITCH_CHECK` = `WM_APP+3` | a Space ended a word, detection on | 0 | `App::check_word` → `capture().take_word`, `detect::wrong_layout`, start the blink |
 | `WM_TIMER` | `SetTimer(None, 0, TICK_MS)` every 150 ms | | `App::tick` |
@@ -102,8 +102,8 @@ All `Relaxed`: each is an independent flag, nothing is published through them.
   recorded as a phrase or fire the trigger again.
 - `Capture` is locked only briefly, never across `SendInput`, the clipboard or a sleep: the hook thread locks it
   on every key and would stall, and Windows would drop the hook.
-- The hook passes every key on except what `Effect::Swallow`, `SwitchLayout` and `ConvertSelection` drop (Caps
-  Lock in its modes, Pause of Shift+Pause). Dropping anything else would eat the user's typing.
+- The hook passes every key on except what `Effect::Swallow`, `SwitchLayout`, `ConvertPause` and
+  `ConvertSelection` drop (Caps Lock in its modes, Pause alone and of Shift+Pause). Dropping anything else would eat the user's typing.
 - The phrase layout, not the window's, decides the conversion target (`Buffer::lang`): the user may switch by hand
   before the double Shift.
 - `CONVERTING` guards reentry; `ENABLED` is read on the hook thread but changed on the main thread.
@@ -131,7 +131,7 @@ All `Relaxed`: each is an independent flag, nothing is published through them.
 |---|---|
 | `scripts/cargo-gnu.sh` | cargo for `x86_64-pc-windows-gnu` in WSL with a MinGW unpacked to `~/.local/opt/mingw-w64`, static CRT; the release exe used everywhere |
 | `scripts/cargo-win.sh` | Windows `cargo.exe` (MSVC) on the WSL repo, `CARGO_TARGET_DIR=C:\dev\kbswitch-target` through `WSLENV`; native tests |
-| `scripts/e2e-notepad.ps1` | end-to-end check on Windows: starts a local copy of the exe, types into an Edit control, checks double Shift, Shift+Pause and the clipboard |
+| `scripts/e2e-notepad.ps1` | end-to-end check on Windows: starts a local copy of the exe, types into an Edit control, checks double Shift, Pause, Shift+Pause and the clipboard |
 | `scripts/install-win.sh` | copies the release exe to `%LOCALAPPDATA%\kbswitch`, unblocks and restarts it (no security prompt from `\\wsl.localhost`) |
 
 Details, gates and the manual checklist: [windows-build](../../quality-gate/windows-build/SKILL.md).

@@ -1,12 +1,12 @@
 ---
 name: step-2-trigger
-description: Step 2 of kbswitch — the double Shift state machine in `src/trigger.rs` field by field (tap_max_ms, double_ms, down_at, interrupted, last_tap_up) and method by method, how `src/capture.rs` feeds it (which vks are Shift, Ctrl/Alt/Win as hotkeys, other keys cancel), the Shift+Pause selection trigger, the handover through `src/hook.rs` to the main thread, every test and what it proves. Use when changing double Shift or Shift+Pause detection or timing, debugging false or missed triggers, or adding another trigger.
+description: Step 2 of kbswitch — the double Shift state machine in `src/trigger.rs` field by field (tap_max_ms, double_ms, down_at, interrupted, last_tap_up) and method by method, how `src/capture.rs` feeds it (which vks are Shift, Ctrl/Alt/Win as hotkeys, other keys cancel), the Pause (Break) key trigger and the Shift+Pause selection trigger, the handover through `src/hook.rs` to the main thread, every test and what it proves. Use when changing double Shift, Pause or Shift+Pause detection or timing, debugging false or missed triggers, or adding another trigger.
 ---
 
 # Step 2: trigger
 
 Decides that the user asked for a conversion: a double tap on Shift (`src/trigger.rs`, fed by `Capture::key` in
-`src/capture.rs`) or Shift+Pause (`Capture::key` alone). The keyboard hook then posts the request to the main thread
+`src/capture.rs`), Pause (Break) alone, or Shift+Pause (both `Capture::key` alone). The keyboard hook then posts the request to the main thread
 (`src/hook.rs`), which runs step 3 ([step-3-convert](../step-3-convert/SKILL.md)). Step 1 records the phrase
 ([step-1-capture](../step-1-capture/SKILL.md)); the timings come from `settings.json`
 ([tray-autostart](../../artifact/tray-autostart/SKILL.md)).
@@ -86,27 +86,41 @@ also calls `other()` (`swallowed_caps_lock_cancels_a_pending_shift_tap`), althou
 The Caps Lock branch runs before the Shift branch in `key`, and a window change (`e.window != self.window`) resets
 the phrase but not the trigger: double Shift in a window you just switched to still converts the selection there.
 
-## Shift+Pause (`src/capture.rs`)
+## Pause and Shift+Pause (`src/capture.rs`)
 
-For apps that use double Shift themselves (IDEs: "search everywhere"). On a key-down with `e.vk == VK_PAUSE`
-(0x13) while `e.shift` and neither `e.ctrl_alt` nor `e.win` → `Effect::ConvertSelection`. Decisions:
+On a key-down with `e.vk == VK_PAUSE` (0x13, the Pause/Break key) and neither `e.ctrl_alt` nor `e.win`:
+`e.shift` → `Effect::ConvertSelection`, else `Effect::ConvertPause`.
 
-- Checked after `trigger.other()`, so the Shift of the chord is interrupted and its up is no tap; after the chord a
+- Pause alone is a one-key double Shift (added 2026-10-18 on request, like Punto Switcher's Break): the hook
+  swallows it and posts `request_convert(0)`, so step 3 runs `convert::run` (typed phrase, else the selection,
+  else only the layout switch). No modifier is held, so no wait for a release is needed; the Pause key sends its
+  make and break together, so its up arrives before step 3 injects anything
+  (`pause_alone_converts_the_phrase_and_is_swallowed`).
+- Shift+Pause is for apps that use double Shift themselves (IDEs: "search everywhere") and converts only the
+  selection.
+
+Decisions for both:
+
+- Checked after `trigger.other()`, so a pending Shift tap is cancelled and the Shift of the chord is interrupted and its up is no tap; after the chord a
   fresh double Shift works (`shift_pause_converts_the_selection_and_is_swallowed`).
-- Before the phrase logic, so the Pause never reaches `Buffer::key_down`. The phrase is forgotten by step 3
-  instead (`run_selection` → `capture().forget()`), since the text on screen changes.
-- Swallowed by the hook (`LRESULT(1)`): Pause does nothing useful in editors, and a passed-through Pause would be
+- Before the phrase logic, so the Pause never reaches `Buffer::key_down`: Pause alone needs the phrase intact for
+  the retype; Shift+Pause has step 3 forget it instead (`run_selection` → `capture().forget()`), since the text on
+  screen changes.
+- Swallowed by the hook (`LRESULT(1)`) in both cases: Pause does nothing useful in editors, and a passed-through Pause would be
   recorded as a Reset key. Its key-up passes (`Effect::Pass`, the up branch has no Pause check).
-- Fires on the key-down, unlike double Shift, because there is no second tap to wait for; the user's Shift is
-  therefore usually still held, and step 3 waits up to 1 s for its release before injecting input.
-- Pause alone, or Ctrl+Shift+Pause (`VK_CANCEL` arrives as 0x03 for Ctrl+Pause anyway) pass through and reset the
-  phrase like any Reset-class key (`pause_alone_or_with_ctrl_is_no_trigger`).
-- Not configurable: the only chord Windows and common editors leave unused; a setting would need a key parser.
+- Fires on the key-down, unlike double Shift, because there is no second tap to wait for; for Shift+Pause the
+  user's Shift is therefore usually still held, and step 3 waits up to 1 s for its release before injecting input.
+- With Ctrl, Alt or Win held (Ctrl+Shift+Pause, Win+Pause opens System settings; `VK_CANCEL` arrives as 0x03 for
+  Ctrl+Pause anyway) the key passes through and resets the phrase like any Reset-class key
+  (`pause_with_ctrl_alt_or_win_is_no_trigger`). Apps that need a bare Pause (debuggers, games) no longer get it
+  while kbswitch runs; tray "Enabled" off does not change that, only the post is gated.
+- Not configurable: Pause is the one key Windows and common editors leave unused; a setting would need a key parser.
 
 ## Handover (`src/hook.rs`, `src/main.rs`, `src/app.rs`)
 
 ```text
 keyboard_proc ─ Effect::Convert ──────────► request_convert(0)
+              ─ Effect::ConvertPause ─────► request_convert(0); return LRESULT(1)
               ─ Effect::ConvertSelection ─► request_convert(SELECTION_ONLY); return LRESULT(1)
 request_convert(what): ENABLED && !CONVERTING → post_with(WM_KBSWITCH_CONVERT, what)
 post_with: PostThreadMessageW(MAIN_THREAD, msg, WPARAM(what), LPARAM(0))

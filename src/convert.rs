@@ -1,4 +1,4 @@
-//! Runs on the main thread after `WM_KBSWITCH_CONVERT`: double Shift (`run`) or Shift+Pause (`run_selection`).
+//! Runs on the main thread after `WM_KBSWITCH_CONVERT`: double Shift or Pause (`run`), Shift+Pause (`run_selection`).
 
 use std::sync::atomic::Ordering;
 use std::{thread, time::Duration};
