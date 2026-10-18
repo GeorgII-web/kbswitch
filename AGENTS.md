@@ -56,6 +56,6 @@ Settings live in `settings.json` (`%APPDATA%\kbswitch`, or next to the exe) and 
 - After adding, renaming or removing a skill, update the tables above and run the validator:
   `SKILLS_ROOT=$PWD bash ~/wawibox/.agents/skills/coding/project-skills-validation/validate.sh`.
 - Commit every finished change right away: one commit per logical change, short imperative subject, staged files
-  only. Remote `git@github.com:GeorgII-web/kbswitcher.git` (SSH, `~/.ssh/id_ed25519`); the user pushes.
+  only. Remote `git@github.com:GeorgII-web/kbswitch.git` (SSH, `~/.ssh/id_ed25519`).
 - `README.md` is the user-facing page (download, keys, settings, build); update it when a key, setting or the
   tray menu changes.

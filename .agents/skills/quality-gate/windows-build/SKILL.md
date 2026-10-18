@@ -172,7 +172,7 @@ WSL through the slow share. Gates there: `scripts/cargo-win.sh fmt --check`,
 ## GitHub release
 
 `.github/workflows/release.yml` publishes the exe for download at
-`https://github.com/GeorgII-web/kbswitcher/releases/latest`. Release: bump `version` in `Cargo.toml`, commit, then
+`https://github.com/GeorgII-web/kbswitch/releases/latest`. Release: bump `version` in `Cargo.toml`, commit, then
 `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 - Trigger: a pushed tag `v*` only; a branch push builds nothing. `permissions: contents: write` lets the job's

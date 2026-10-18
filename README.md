@@ -5,7 +5,7 @@ Switcher or Caramba Switcher. One `.exe`, no installer, no console window.
 
 ## Download
 
-Get `kbswitch.exe` from the [latest release](https://github.com/GeorgII-web/kbswitcher/releases/latest), put it in
+Get `kbswitch.exe` from the [latest release](https://github.com/GeorgII-web/kbswitch/releases/latest), put it in
 any folder (for example `C:\Program Files\kbswitch`) and run it. The exe is not signed, so Windows SmartScreen may
 ask once: "More info" → "Run anyway".
 
