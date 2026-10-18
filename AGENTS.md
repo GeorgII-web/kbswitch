@@ -35,7 +35,7 @@ Settings live in `settings.json` (`%APPDATA%\kbswitch`, or next to the exe) and 
 | [clipboard-input](.agents/skills/artifact/clipboard-input/SKILL.md) | clipboard snapshot and restore, Win+V exclusion flags, every injected key sequence (`SendInput` builders, marker, scan-code replay) |
 | [tray-autostart](.agents/skills/artifact/tray-autostart/SKILL.md) | tray icon (letters, colors, font) and menu, `settings.json` and its keys, "Start with Windows", single instance, startup errors |
 | [test-cases](.agents/skills/quality-gate/test-cases/SKILL.md) | every unit, end-to-end and manual test case with steps and expected result, known gaps; adding a test, what a change must not break, what was verified |
-| [windows-build](.agents/skills/quality-gate/windows-build/SKILL.md) | building, `fmt`/`clippy`/tests, the Windows end-to-end script, installing without the security prompt, the manual test checklist, before reporting a change done |
+| [windows-build](.agents/skills/quality-gate/windows-build/SKILL.md) | building, `fmt`/`clippy`/tests, the Windows end-to-end script, installing without the security prompt, the manual test checklist, the GitHub release workflow, before reporting a change done |
 
 ## Working rules
 
@@ -55,5 +55,7 @@ Settings live in `settings.json` (`%APPDATA%\kbswitch`, or next to the exe) and 
   gets a section in the right skill or a new skill.
 - After adding, renaming or removing a skill, update the tables above and run the validator:
   `SKILLS_ROOT=$PWD bash ~/wawibox/.agents/skills/coding/project-skills-validation/validate.sh`.
-- Commit every finished change to the local git right away (no remote): one commit per logical change, short
-  imperative subject, staged files only.
+- Commit every finished change right away: one commit per logical change, short imperative subject, staged files
+  only. Remote `git@github.com:GeorgII-web/kbswitcher.git` (SSH, `~/.ssh/id_ed25519`); the user pushes.
+- `README.md` is the user-facing page (download, keys, settings, build); update it when a key, setting or the
+  tray menu changes.

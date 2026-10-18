@@ -1,6 +1,6 @@
 ---
 name: windows-build
-description: Build and quality gates for kbswitch — the WSL gates (Linux tests, fmt, clippy for both targets, the static GNU release exe via `scripts/cargo-gnu.sh` line by line), the automated Windows end-to-end check `scripts/e2e-notepad.ps1` function by function with its pitfalls, installing the exe locally with `scripts/install-win.sh` and why the security prompt appears, the native MSVC build via `scripts/cargo-win.sh`, the WSL interop fix, exe paths, the Windows-only unit tests, the manual checklist, debugging. Use when building, running tests or the e2e script, installing the exe, before reporting any change done, or when a build, toolchain or test run fails or hangs.
+description: Build and quality gates for kbswitch — the WSL gates (Linux tests, fmt, clippy for both targets, the static GNU release exe via `scripts/cargo-gnu.sh` line by line), the automated Windows end-to-end check `scripts/e2e-notepad.ps1` function by function with its pitfalls, installing the exe locally with `scripts/install-win.sh` and why the security prompt appears, the native MSVC build via `scripts/cargo-win.sh`, the WSL interop fix, exe paths, the Windows-only unit tests, the manual checklist, the GitHub release workflow, debugging. Use when building, running tests or the e2e script, installing the exe, publishing a release, before reporting any change done, or when a build, toolchain or test run fails or hangs.
 ---
 
 # Windows build
@@ -168,6 +168,27 @@ existing `WSLENV`); `exec cargo.exe "$@"`. Sources are read from `\\wsl.localhos
 NTFS, which keeps incremental builds fast. Never run plain `cargo.exe` in the repo: it would write `target\` into
 WSL through the slow share. Gates there: `scripts/cargo-win.sh fmt --check`,
 `clippy --all-targets -- -D warnings`, `test`.
+
+## GitHub release
+
+`.github/workflows/release.yml` publishes the exe for download at
+`https://github.com/GeorgII-web/kbswitcher/releases/latest`. Release: bump `version` in `Cargo.toml`, commit, then
+`git tag vX.Y.Z && git push origin vX.Y.Z`.
+
+- Trigger: a pushed tag `v*` only; a branch push builds nothing. `permissions: contents: write` lets the job's
+  `GITHUB_TOKEN` create the release.
+- Runner `ubuntu-24.04`, not Windows: the same `scripts/cargo-gnu.sh` as in WSL, so the released exe is the static
+  GNU build that was tested here, not a different MSVC one.
+- `rustup toolchain install stable --profile minimal --component clippy,rustfmt --target x86_64-pc-windows-gnu`:
+  the GNU target is not preinstalled on the runner.
+- `sudo apt-get update`: the runner image ships without package lists, and `cargo-gnu.sh` uses `apt-get download`
+  for MinGW (it unpacks to `~/.local/opt/mingw-w64` as in WSL).
+- Gates before the build: `cargo test`, `cargo fmt --check`, GNU `clippy --all-targets -- -D warnings`; a failure
+  stops the job and no release is created. Host `clippy` is skipped there; it runs locally.
+- `softprops/action-gh-release@v2`: creates the release named after the tag, attaches
+  `target/x86_64-pc-windows-gnu/release/kbswitch.exe`, `generate_release_notes` lists the commits since the last tag.
+- The exe is unsigned: a downloaded copy carries the internet zone mark, so SmartScreen asks once ("More info" →
+  "Run anyway"); the README says so.
 
 ## Manual check
 
